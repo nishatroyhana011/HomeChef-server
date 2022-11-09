@@ -16,6 +16,7 @@ async function run() {
 
   try {
     const serviceCollection = client.db("HomeChef").collection("Services");
+    const reviewCollection = client.db("HomeChef").collection("Reviews");
 
     //token send to server
     app.post('/jwt', (req, res) => {
@@ -49,12 +50,32 @@ async function run() {
     });
 
     //get a service by id
-    app.get('/services/:id', async(req, res)=>{
+    app.get('/services/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id: ObjectId(id)}
+      const query = { _id: ObjectId(id) }
       const singleService = await serviceCollection.findOne(query);
       res.send(singleService)
-  });
+    });
+
+    //add a review
+    app.post('/reviews', async (req, res) => {
+      const review = req.body;
+      const result = await reviewCollection.insertOne(review);
+      res.send(result);
+    });
+
+    //display review by service id
+    app.get('/reviews', async (req, res) => {
+      let query = {}
+      if (req.query.serviceId) {
+        query = {
+          serviceId: req.query.serviceId
+        }
+      }
+      const cursor = reviewCollection.find(query);
+      const reviews = await cursor.toArray();
+      res.send(reviews)
+    });
 
   }
   finally {
